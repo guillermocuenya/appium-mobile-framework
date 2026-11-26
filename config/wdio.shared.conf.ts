@@ -41,5 +41,12 @@ export const sharedConfig: WebdriverIO.Config = {
     const activity = await driver.getCurrentActivity().catch(() => '?');
     const texts = [...source.matchAll(/text="([^"]+)"/g)].map((m) => m[1]).slice(0, 25);
     console.log(`[failure context] activity=${activity} visible texts: ${texts.join(' | ')}`);
+    // If the app crashed, the Java stack trace is the most valuable evidence for the bug report.
+    const logcat = (await driver.getLogs('logcat').catch(() => [])) as { message: string }[];
+    const crash = logcat.map((l) => l.message).filter((m) => /FATAL EXCEPTION|AndroidRuntime|Caused by|com\.saucelabs/.test(m));
+    if (crash.length) {
+      console.log(`[crash log]\n${crash.slice(-40).join('\n')}`);
+      fs.writeFileSync(path.join(dir, `${safe}.logcat.txt`), crash.join('\n'));
+    }
   },
 };

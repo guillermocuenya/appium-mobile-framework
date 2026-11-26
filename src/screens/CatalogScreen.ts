@@ -12,9 +12,13 @@ import ProductDetailScreen from './ProductDetailScreen.js';
 async function scrollUntilDisplayed(selector: string, maxSwipes = 15): Promise<void> {
   for (let i = 0; i <= maxSwipes; i += 1) {
     if (await $(selector).isDisplayed().catch(() => false)) return;
-    const container = await $(id('scrollView'));
+    const { width, height } = await driver.getWindowSize();
+    // Scroll area = the middle band of the screen (below the header, above the nav bar).
     const canScrollMore = await driver.execute('mobile: scrollGesture', {
-      elementId: container.elementId,
+      left: Math.round(width * 0.1),
+      top: Math.round(height * 0.3),
+      width: Math.round(width * 0.8),
+      height: Math.round(height * 0.5),
       direction: 'down',
       percent: 0.6,
     });
