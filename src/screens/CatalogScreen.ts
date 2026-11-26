@@ -1,6 +1,20 @@
 import { APP_ID } from '../../config/wdio.shared.conf.js';
 import { BaseScreen } from './BaseScreen.js';
 import { id, scrollToText } from '../utils/locators.js';
+import ProductDetailScreen from './ProductDetailScreen.js';
+
+/** Resolves when the element is at the same position in two consecutive reads. */
+async function waitUntilStill(el: WebdriverIO.Element): Promise<void> {
+  await browser.waitUntil(
+    async () => {
+      const a = await el.getLocation();
+      await browser.pause(250);
+      const b = await el.getLocation();
+      return a.x === b.x && a.y === b.y;
+    },
+    { timeout: 5_000, timeoutMsg: 'list did not settle after scrolling' },
+  );
+}
 
 export type SortOption = 'nameAsc' | 'nameDesc' | 'priceAsc' | 'priceDesc';
 
@@ -25,15 +39,29 @@ class CatalogScreen extends BaseScreen {
   /**
    * Only the product image opens the detail screen (the title is not clickable),
    * so we locate the card by its title and tap the image in the same card.
+   *
+   * Mobile gotcha: right after a scroll the list is still moving (fling). A tap during
+   * the fling only stops the scroll and is not delivered as a click. We wait until the
+   * image stops moving before tapping, and retry once if the detail screen didn't open.
    */
   async openProduct(name: string): Promise<void> {
     await this.waitForDisplayed();
-    await $(scrollToText(name));
-    const image = await $(
-      `//*[@resource-id="${APP_ID}:id/titleTV" and @text="${name}"]/../*[@resource-id="${APP_ID}:id/productIV"]`,
-    );
-    await image.waitForDisplayed();
-    await image.click();
+    const imageSelector = `//*[@resource-id="${APP_ID}:id/titleTV" and @text="${name}"]/../*[@resource-id="${APP_ID}:id/productIV"]`;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      if (!(await $(imageSelector).isDisplayed().catch(() => false))) {
+        await $(scrollToText(name)).isExisting();
+      }
+      const image = await $(imageSelector);
+      await image.waitForDisplayed();
+      await waitUntilStill(image);
+      await image.click();
+      try {
+        await ProductDetailScreen.waitForDisplayed(8_000);
+        return;
+      } catch (e) {
+        if (attempt === 2) throw e;
+      }
+    }
   }
 
   async sortBy(option: SortOption): Promise<void> {

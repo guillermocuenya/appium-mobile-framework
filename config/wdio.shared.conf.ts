@@ -37,5 +37,9 @@ export const sharedConfig: WebdriverIO.Config = {
     await browser.saveScreenshot(path.join(dir, `${safe}.png`)).catch(() => undefined);
     const source = await browser.getPageSource().catch(() => '');
     if (source) fs.writeFileSync(path.join(dir, `${safe}.xml`), source);
+    // Short, human-readable trace in the CI log: which screen and which texts were visible.
+    const activity = await driver.getCurrentActivity().catch(() => '?');
+    const texts = [...source.matchAll(/text="([^"]+)"/g)].map((m) => m[1]).slice(0, 25);
+    console.log(`[failure context] activity=${activity} visible texts: ${texts.join(' | ')}`);
   },
 };

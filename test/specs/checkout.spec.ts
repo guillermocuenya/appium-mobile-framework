@@ -11,7 +11,6 @@ import { money, restartWithCleanState, sum } from '../../src/utils/app.js';
 
 async function cartWithBackpackAndGoToCheckout(): Promise<void> {
   await CatalogScreen.openProduct('Sauce Labs Backpack');
-  await ProductDetailScreen.waitForDisplayed();
   await ProductDetailScreen.addToCart();
   await HeaderBar.openCart();
   await CartScreen.proceedToCheckout();

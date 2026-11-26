@@ -2,7 +2,8 @@ import { BaseScreen } from './BaseScreen.js';
 import { id, scrollToId } from '../utils/locators.js';
 
 class ProductDetailScreen extends BaseScreen {
-  protected readonly anchor = id('cartBt');
+  // 'rattingLL' only exists on this screen ('productTV' and 'cartBt' ids are reused elsewhere).
+  protected readonly anchor = id('rattingLL');
 
   async title(): Promise<string> {
     return this.textOf('productTV');

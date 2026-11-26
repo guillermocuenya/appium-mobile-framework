@@ -7,7 +7,6 @@ import { money, restartWithCleanState, sum } from '../../src/utils/app.js';
 
 async function addProduct(name: string, quantity = 1): Promise<void> {
   await CatalogScreen.openProduct(name);
-  await ProductDetailScreen.waitForDisplayed();
   if (quantity > 1) await ProductDetailScreen.increaseQuantity(quantity - 1);
   await ProductDetailScreen.addToCart();
 }
@@ -37,7 +36,6 @@ describe('Cart', () => {
 
   it('quantity 0 disables "Add To Cart" and it never goes negative', async () => {
     await CatalogScreen.openProduct('Sauce Labs Onesie');
-    await ProductDetailScreen.waitForDisplayed();
     expect(await ProductDetailScreen.quantity()).toBe(1);
 
     await ProductDetailScreen.decreaseQuantity(2);

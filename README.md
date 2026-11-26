@@ -23,7 +23,7 @@
 | **Architecture** | Screen Object Model with a `BaseScreen`, a shared `HeaderBar` component, typed test data and an independent product oracle |
 | **Locator strategy** | resource-id first, accessibility id second, text only when nothing else is unique — documented in [`locators.ts`](src/utils/locators.ts) |
 | **Test isolation** | Every test starts from a clean app (`mobile: clearApp` + relaunch): no order dependency, no leftover cart or session |
-| **Coverage** | Sorting (3 orders) checked against a data oracle, prices, product detail, quantity rules, cart totals, login rules, guest → login → checkout redirect, form validation, full purchase |
+| **Coverage** | Sorting (3 orders) checked as an ordering property against a 24-product oracle, prices, product detail, quantity rules, cart totals, login rules, guest → login → checkout redirect, form validation, full purchase |
 | **Debuggability** | On failure: screenshot + **UI hierarchy XML** + Appium server log, uploaded as CI artifacts |
 | **CI/CD** | GitHub Actions: type-check gate → Android emulator (KVM-accelerated) → JUnit → test summary table in the run page; nightly schedule; matrix ready for more API levels |
 | **Cloud-ready** | [`wdio.sauce.conf.ts`](config/wdio.sauce.conf.ts) runs the same suite on a real-device cloud — switching provider is configuration only |
@@ -35,7 +35,9 @@ Things the suite surfaced while being built — the kind of detail that matters 
 1. **Only the product image is clickable** in the catalog; tapping the title does nothing. Users tend to tap the title, so this is a usability issue worth reporting. The Screen Object locates the card by title and taps the image in the same card (XPath scoped to the card, not a global index).
 2. **Quantity can be set to 0** on the product detail screen. The app handles it by disabling *Add To Cart* — the test pins that behaviour so a regression (adding 0 items, or negative quantities) is caught.
 3. **Checkout requires login, but not up front**: a guest can fill the cart and is redirected to login when proceeding to checkout, then continues to the shipping step. The end-to-end test covers this real path instead of logging in first.
-4. **A resource-id typo in the app** (`shoopingBt` on the confirmation screen) — documented in the Screen Object so nobody "fixes" the locator and breaks the test.
+4. **The oracle must match the exact build under test.** The app's main branch ships 6 products, but the pinned release 2.3.0 has 24 (colour variants). The first CI run on a real emulator caught the mismatch; the oracle now mirrors the release, and ordering is asserted as a *property* (every pair in order, SQLite binary collation) because several products share a price.
+5. **Taps during a scroll fling are swallowed.** Tapping a product right after scrolling sometimes only stopped the list. The Screen Object waits until the element stops moving before tapping — a reliability fix, not a `sleep`.
+6. **A resource-id typo in the app** (`shoopingBt` on the confirmation screen) — documented in the Screen Object so nobody "fixes" the locator and breaks the test.
 
 ## Test strategy
 
