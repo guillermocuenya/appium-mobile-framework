@@ -6,8 +6,7 @@
     "typecheck": "tsc --noEmit",
     "test:android": "wdio run ./config/wdio.android.conf.ts",
     "test:smoke": "wdio run ./config/wdio.android.conf.ts --mochaOpts.grep @smoke",
-    "test:cloud": "wdio run ./config/wdio.sauce.conf.ts",
-    "appium:install-driver": "appium driver install uiautomator2"
+    "test:cloud": "wdio run ./config/wdio.sauce.conf.ts"
   },
   "license": "MIT",
   "devDependencies": {

@@ -73,8 +73,7 @@ scripts/
 Requirements: Node 22+, Android SDK with an emulator (Android Studio), `ANDROID_HOME` set, and the [GitHub CLI](https://cli.github.com/) to download the app.
 
 ```bash
-npm ci
-npx appium driver install uiautomator2
+npm ci                             # also installs the pinned UiAutomator2 driver
 ./scripts/download-app.sh          # → apps/mda.apk
 # start an emulator from Android Studio (or: emulator -avd <name>)
 npm run test:android               # full suite

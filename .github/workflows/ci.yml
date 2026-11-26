@@ -37,8 +37,8 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - name: Install Appium UiAutomator2 driver
-        run: npx appium driver install uiautomator2
+      - name: Verify Appium driver (installed by npm ci as a pinned devDependency)
+        run: npx appium driver list --installed
       - name: Download app under test
         run: ./scripts/download-app.sh
         env:
