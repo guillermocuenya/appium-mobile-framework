@@ -1,6 +1,5 @@
-import { APP_ID } from '../../config/wdio.shared.conf.js';
 import { BaseScreen } from './BaseScreen.js';
-import { id, scrollToText } from '../utils/locators.js';
+import { id, productImage, scrollToProductImage } from '../utils/locators.js';
 import ProductDetailScreen from './ProductDetailScreen.js';
 
 /** Resolves when the element is at the same position in two consecutive reads. */
@@ -46,12 +45,11 @@ class CatalogScreen extends BaseScreen {
    */
   async openProduct(name: string): Promise<void> {
     await this.waitForDisplayed();
-    const imageSelector = `//*[@resource-id="${APP_ID}:id/titleTV" and @text="${name}"]/../*[@resource-id="${APP_ID}:id/productIV"]`;
     for (let attempt = 1; attempt <= 2; attempt += 1) {
-      if (!(await $(imageSelector).isDisplayed().catch(() => false))) {
-        await $(scrollToText(name)).isExisting();
+      if (!(await $(productImage(name)).isDisplayed().catch(() => false))) {
+        await $(scrollToProductImage(name)).isExisting();
       }
-      const image = await $(imageSelector);
+      const image = await $(productImage(name));
       await image.waitForDisplayed();
       await waitUntilStill(image);
       await image.click();

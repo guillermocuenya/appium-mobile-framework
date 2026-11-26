@@ -17,3 +17,16 @@ export const scrollToId = (resourceId: string): string =>
 /** Scrolls until an element with this exact text is visible. */
 export const scrollToText = (text: string): string =>
   `android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().text("${text}"))`;
+
+/**
+ * The product image that sits in the same card as the given title.
+ * `fromParent` selects a sibling of the matched title — native UiAutomator, no XPath,
+ * so it works inside nested scrolling containers and is much faster than XPath.
+ */
+const productImageSelector = (title: string): string =>
+  `new UiSelector().text("${title}").fromParent(new UiSelector().resourceId("${APP_ID}:id/productIV"))`;
+
+export const productImage = (title: string): string => `android=${productImageSelector(title)}`;
+
+export const scrollToProductImage = (title: string): string =>
+  `android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(${productImageSelector(title)})`;
