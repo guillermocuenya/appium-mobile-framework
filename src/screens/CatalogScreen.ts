@@ -1,6 +1,29 @@
 import { BaseScreen } from './BaseScreen.js';
-import { id, productImage, scrollToProductImage } from '../utils/locators.js';
+import { id, productImage } from '../utils/locators.js';
 import ProductDetailScreen from './ProductDetailScreen.js';
+
+/**
+ * Bounded, deterministic scrolling of the catalog's outer container.
+ * Why not UiScrollable.scrollIntoView? The product grid is a RecyclerView nested in a
+ * ScrollView: UiScrollable picks the inner list (which can't scroll), keeps swiping and
+ * can hang the UiAutomator2 server on the device. Here we scroll the real container,
+ * at most N times, and stop as soon as the target is visible or the end is reached.
+ */
+async function scrollUntilDisplayed(selector: string, maxSwipes = 15): Promise<void> {
+  for (let i = 0; i <= maxSwipes; i += 1) {
+    if (await $(selector).isDisplayed().catch(() => false)) return;
+    const container = await $(id('scrollView'));
+    const canScrollMore = await driver.execute('mobile: scrollGesture', {
+      elementId: container.elementId,
+      direction: 'down',
+      percent: 0.6,
+    });
+    if (!canScrollMore && !(await $(selector).isDisplayed().catch(() => false))) break;
+  }
+  if (!(await $(selector).isDisplayed().catch(() => false))) {
+    throw new Error(`Not found after scrolling the catalog: ${selector}`);
+  }
+}
 
 /** Resolves when the element is at the same position in two consecutive reads. */
 async function waitUntilStill(el: WebdriverIO.Element): Promise<void> {
@@ -46,9 +69,7 @@ class CatalogScreen extends BaseScreen {
   async openProduct(name: string): Promise<void> {
     await this.waitForDisplayed();
     for (let attempt = 1; attempt <= 2; attempt += 1) {
-      if (!(await $(productImage(name)).isDisplayed().catch(() => false))) {
-        await $(scrollToProductImage(name)).isExisting();
-      }
+      await scrollUntilDisplayed(productImage(name));
       const image = await $(productImage(name));
       await image.waitForDisplayed();
       await waitUntilStill(image);

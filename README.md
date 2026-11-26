@@ -36,8 +36,9 @@ Things the suite surfaced while being built — the kind of detail that matters 
 2. **Quantity can be set to 0** on the product detail screen. The app handles it by disabling *Add To Cart* — the test pins that behaviour so a regression (adding 0 items, or negative quantities) is caught.
 3. **Checkout requires login, but not up front**: a guest can fill the cart and is redirected to login when proceeding to checkout, then continues to the shipping step. The end-to-end test covers this real path instead of logging in first.
 4. **The oracle must match the exact build under test.** The app's main branch ships 6 products, but the pinned release 2.3.0 has 24 (colour variants). The first CI run on a real emulator caught the mismatch; the oracle now mirrors the release, and ordering is asserted as a *property* (every pair in order, SQLite binary collation) because several products share a price.
-5. **Taps during a scroll fling are swallowed.** Tapping a product right after scrolling sometimes only stopped the list. The Screen Object waits until the element stops moving before tapping — a reliability fix, not a `sleep`.
-6. **A resource-id typo in the app** (`shoopingBt` on the confirmation screen) — documented in the Screen Object so nobody "fixes" the locator and breaks the test.
+5. **`UiScrollable` can hang the device in nested lists.** The product grid is a RecyclerView inside a ScrollView; `scrollIntoView` swiped the wrong (non-scrollable) container until the UiAutomator2 server died and every following test failed. Replaced with a bounded `mobile: scrollGesture` loop on the real container, plus session self-healing.
+6. **Taps during a scroll fling are swallowed.** Tapping a product right after scrolling sometimes only stopped the list. The Screen Object waits until the element stops moving before tapping — a reliability fix, not a `sleep`.
+7. **A resource-id typo in the app** (`shoopingBt` on the confirmation screen) — documented in the Screen Object so nobody "fixes" the locator and breaks the test.
 
 ## Test strategy
 

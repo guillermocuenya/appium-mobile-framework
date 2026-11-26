@@ -27,6 +27,3 @@ const productImageSelector = (title: string): string =>
   `new UiSelector().text("${title}").fromParent(new UiSelector().resourceId("${APP_ID}:id/productIV"))`;
 
 export const productImage = (title: string): string => `android=${productImageSelector(title)}`;
-
-export const scrollToProductImage = (title: string): string =>
-  `android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(${productImageSelector(title)})`;
