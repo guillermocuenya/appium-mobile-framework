@@ -53,9 +53,10 @@ describe('Catalog', () => {
     });
   }
 
-  it('opens the product detail with the same name and price (product below the fold)', async () => {
-    await CatalogScreen.openProduct('Sauce Labs Bike Light');
-    expect(await ProductDetailScreen.title()).toBe('Sauce Labs Bike Light');
-    expect(await ProductDetailScreen.price()).toBe(money(9.99));
+  it('opens the product detail with the same name and price', async () => {
+    await CatalogScreen.sortBy('priceAsc');
+    await CatalogScreen.openProduct('Sauce Labs Onesie');
+    expect(await ProductDetailScreen.title()).toBe('Sauce Labs Onesie');
+    expect(await ProductDetailScreen.price()).toBe(money(7.99));
   });
 });

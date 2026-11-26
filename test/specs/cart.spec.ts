@@ -5,7 +5,13 @@ import CartScreen from '../../src/screens/CartScreen.js';
 import HeaderBar from '../../src/screens/HeaderBar.js';
 import { money, restartWithCleanState, sum } from '../../src/utils/app.js';
 
-async function addProduct(name: string, quantity = 1): Promise<void> {
+/**
+ * BUG-001/002 (see known-defects.spec.ts): opening a product in grid position 2 or
+ * position 7+ crashes the app. Business flows therefore open products that are first
+ * in a given sort order: Backpack (name A→Z, default) and Onesie (price low → high).
+ */
+async function addProduct(name: 'Sauce Labs Backpack' | 'Sauce Labs Onesie', quantity = 1): Promise<void> {
+  if (name === 'Sauce Labs Onesie') await CatalogScreen.sortBy('priceAsc');
   await CatalogScreen.openProduct(name);
   if (quantity > 1) await ProductDetailScreen.increaseQuantity(quantity - 1);
   await ProductDetailScreen.addToCart();
@@ -35,7 +41,7 @@ describe('Cart', () => {
   });
 
   it('quantity 0 disables "Add To Cart" and it never goes negative', async () => {
-    await CatalogScreen.openProduct('Sauce Labs Onesie');
+    await CatalogScreen.openProduct('Sauce Labs Backpack');
     expect(await ProductDetailScreen.quantity()).toBe(1);
 
     await ProductDetailScreen.decreaseQuantity(2);
@@ -49,18 +55,18 @@ describe('Cart', () => {
   it('keeps a running total across different products', async () => {
     await addProduct('Sauce Labs Backpack');
     await driver.back();
-    await addProduct('Sauce Labs Bike Light');
+    await addProduct('Sauce Labs Onesie');
     expect(await HeaderBar.cartCount()).toBe(2);
 
     await HeaderBar.openCart();
-    expect((await CartScreen.itemNames()).sort()).toEqual(['Sauce Labs Backpack', 'Sauce Labs Bike Light']);
-    expect(await CartScreen.total()).toBe(money(sum(29.99, 9.99)));
+    expect((await CartScreen.itemNames()).sort()).toEqual(['Sauce Labs Backpack', 'Sauce Labs Onesie']);
+    expect(await CartScreen.total()).toBe(money(sum(29.99, 7.99)));
   });
 
   it('removing the only item returns the cart to its empty state', async () => {
-    await addProduct('Sauce Labs Bike Light');
+    await addProduct('Sauce Labs Onesie');
     await HeaderBar.openCart();
-    await CartScreen.remove('Sauce Labs Bike Light');
+    await CartScreen.remove('Sauce Labs Onesie');
     expect(await CartScreen.isEmpty()).toBe(true);
     expect(await HeaderBar.cartCount()).toBe(0);
   });

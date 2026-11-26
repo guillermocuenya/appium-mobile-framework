@@ -9,7 +9,7 @@
 
 > Mobile end-to-end automation for a native Android shopping app with **WebdriverIO + Appium (UiAutomator2) + TypeScript**, using the Screen Object Model and running on a **real Android emulator in CI** on every push.
 
-**19 tests · 4 suites (catalog, cart, login, checkout) · full purchase flow from guest to order confirmation · evidence captured on every failure.**
+**19 tests + 2 quarantined defect reproductions · 5 suites · full purchase flow from guest to order confirmation · 2 crash bugs found and root-caused.**
 
 ## System under test
 
@@ -24,7 +24,7 @@
 | **Locator strategy** | resource-id first, accessibility id second, text only when nothing else is unique — documented in [`locators.ts`](src/utils/locators.ts) |
 | **Test isolation** | Every test starts from a clean app (`mobile: clearApp` + relaunch): no order dependency, no leftover cart or session |
 | **Coverage** | Sorting (3 orders) checked as an ordering property against a 24-product oracle, prices, product detail, quantity rules, cart totals, login rules, guest → login → checkout redirect, form validation, full purchase |
-| **Debuggability** | On failure: screenshot + **UI hierarchy XML** + Appium server log, uploaded as CI artifacts |
+| **Debuggability** | On failure: screenshot + **UI hierarchy XML** + **logcat crash trace** + Appium server log, uploaded as CI artifacts |
 | **CI/CD** | GitHub Actions: type-check gate → Android emulator (KVM-accelerated) → JUnit → test summary table in the run page; nightly schedule; matrix ready for more API levels |
 | **Cloud-ready** | [`wdio.sauce.conf.ts`](config/wdio.sauce.conf.ts) runs the same suite on a real-device cloud — switching provider is configuration only |
 
@@ -32,6 +32,7 @@
 
 Things the suite surfaced while being built — the kind of detail that matters in real projects:
 
+0. **🐞 Crash defects (BUG-001 / BUG-002).** On a real emulator the app crashed ("My Demo App keeps stopping") when opening some products. Logcat capture on failure plus the app's source pinpointed the root cause: the tap handler reads `meta[position]` from `[0, null, 2, 3, 4, 5]` → `NullPointerException` for the 2nd product and `ArrayIndexOutOfBoundsException` from the 7th on. Business flows use crash-safe products, and the defects live in a **quarantined** suite ([`known-defects.spec.ts`](test/specs/known-defects.spec.ts)) that documents reproduction and is re-enabled to verify the fix — so the pipeline stays a trustworthy signal.
 1. **Only the product image is clickable** in the catalog; tapping the title does nothing. Users tend to tap the title, so this is a usability issue worth reporting. The Screen Object locates the card by title and taps the image in the same card (XPath scoped to the card, not a global index).
 2. **Quantity can be set to 0** on the product detail screen. The app handles it by disabling *Add To Cart* — the test pins that behaviour so a regression (adding 0 items, or negative quantities) is caught.
 3. **Checkout requires login, but not up front**: a guest can fill the cart and is redirected to login when proceeding to checkout, then continues to the shipping step. The end-to-end test covers this real path instead of logging in first.
@@ -64,7 +65,7 @@ src/
   screens/                Screen Objects: Catalog, ProductDetail, Cart, Login, Checkout (4 steps), HeaderBar
   data/                   Product oracle and synthetic checkout data
   utils/                  Locator helpers, app reset, money formatting
-test/specs/               catalog · cart · login · checkout
+test/specs/               catalog · cart · login · checkout · known-defects (quarantined)
 scripts/
   download-app.sh         Fetches the pinned APK release
   junit-summary.mjs       JUnit → Markdown summary in the GitHub Actions run
